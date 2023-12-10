@@ -1,3 +1,32 @@
+#let day4() = {
+  [= Day 4]
+  let cards = read("data/day4.txt").split("\n").slice(0,-1)
+
+  let card_sum = 0
+
+  for card in cards {
+    let points = 0
+    let (ws, hs) = card.split(":").at(1).split("|")
+
+    let winning = ws.split()
+    let have = hs.split()
+    for h in have {
+      if winning.contains(h) {
+        if points == 0 {
+          points = 1
+        } else {
+          points = points + points
+        }
+      }
+    }
+    card_sum += points
+  }
+
+  [Part 1: #card_sum]
+
+
+}
+
 #let day2() = {
   [= Day 2]
   let games = read("data/day2.txt").split("\n").slice(0,-1)
@@ -67,4 +96,5 @@
 
 #day1()
 #day2()
+#day4()
 
