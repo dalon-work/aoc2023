@@ -22,8 +22,33 @@
     card_sum += points
   }
 
-  [Part 1: #card_sum]
+  [Part 1: #card_sum \ ]
 
+  let copies = (1,)
+  for c in cards.slice(0,-1) {
+    copies.push(1)
+  }
+
+  for (i,c) in cards.enumerate() {
+    let matches = 0
+    let (ws, hs) = c.split(":").at(1).split("|")
+
+    let winning = ws.split()
+    let have = hs.split()
+    for h in have {
+      if winning.contains(h) {
+        matches += 1
+      }
+    }
+
+    let j = 0;
+    while j < matches {
+      copies.at(i+j+1) += copies.at(i)
+      j += 1
+    }
+  }
+
+  [Part 2: #copies.sum()]
 
 }
 
