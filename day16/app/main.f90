@@ -1,5 +1,5 @@
 program main
-  use iso_fortran_env, only: r32 => real32, iostat_eor, iostat_end
+  use iso_fortran_env, only: r32 => real32
   implicit none
 
   integer, parameter :: N_ROWS = 110
@@ -94,34 +94,13 @@ contains
     ! This is the laser input
     grid(start_i, start_j, start_dir, :) = 1.0
 
+    ! yeah, I know I'm comparing floating point, this 
+    ! works as long as we don't do stuff in parallel
+    ! otherwise we have to check if each cell's total energy has changed
     do while (total_energy(old) /= total_energy(new))
       call stream_photons(grid, old, new)
 
       call collide_photons(map, grid, total_energy(new), old, new)
-
-      !write(*,*) sum(grid(1:N_ROWS, 1:N_COLS, :, new))
-
-      !block
-      !  character :: energized_map(N_ROWS, N_COLS)
-
-      !do j=1,N_COLS
-      !  do i=1,N_ROWS
-      !    if (any( grid(i,j,:,new) > 0.0 ) ) then
-      !      energized_map(i,j) = '#'
-      !    else
-      !      energized_map(i,j) = '.'
-      !    end if
-      !  end do
-      !end do
-
-      !do i=1,N_ROWS
-      !  write(*,*) energized_map(i,:)
-      !end do
-
-      !write(*,*) count(energized_map == '#')
-
-      !end block
-      !write(*,*) ' '
 
       call swap(old, new)
     end do
@@ -148,11 +127,6 @@ contains
     b = tmp
   end subroutine
 
-  subroutine init_boundaries(grid, old)
-    real(r32), intent(inout) :: grid(0:N_ROWS+1, 0:N_COLS+1, N_DIRS, N_COPIES)
-    integer, intent(in) :: old
-  end subroutine init_boundaries
-
   subroutine stream_photons(grid, old, new)
     real(r32), intent(inout) :: grid(0:N_ROWS+1, 0:N_COLS+1, N_DIRS, N_COPIES)
     integer, intent(in) :: old, new
@@ -174,35 +148,31 @@ contains
 
     total_energy = 0
 
-    do j=1,N_COLS
-      do i=1,N_ROWS
-        associate( gdirs => grid(i,j,:,new) )
-        total_energy = total_energy + sum(gdirs)
+    do concurrent (i=1:N_ROWS, j=1:N_COLS)
+      associate( gdirs => grid(i,j,:,new) )
+      total_energy = total_energy + sum(gdirs)
 
-        select case (map(i,j))
-        case ('/')
-          call swap_r32( gdirs(DIR_RIGHT), gdirs(DIR_UP) )
-          call swap_r32( gdirs(DIR_LEFT) , gdirs(DIR_DOWN) )
-        case ('\')
-          call swap_r32( gdirs(DIR_RIGHT), gdirs(DIR_DOWN) )
-          call swap_r32( gdirs(DIR_LEFT) , gdirs(DIR_UP) )
-        case ('-')
-          gdirs(DIR_RIGHT) = gdirs(DIR_RIGHT) + 0.5*(gdirs(DIR_UP) + gdirs(DIR_DOWN))
-          gdirs(DIR_LEFT)  = gdirs(DIR_LEFT)  + 0.5*(gdirs(DIR_UP) + gdirs(DIR_DOWN))
-          gdirs(DIR_UP  )  = 0.0
-          gdirs(DIR_DOWN)  = 0.0
-        case ('|')
-          gdirs(DIR_UP)    = gdirs(DIR_UP)    + 0.5*(gdirs(DIR_RIGHT) + gdirs(DIR_LEFT))
-          gdirs(DIR_DOWN)  = gdirs(DIR_DOWN)  + 0.5*(gdirs(DIR_RIGHT) + gdirs(DIR_LEFT))
-          gdirs(DIR_RIGHT) = 0.0
-          gdirs(DIR_LEFT)  = 0.0
-        case default
-        end select
-        end associate
-      end do
+      select case (map(i,j))
+      case ('/')
+        call swap_r32( gdirs(DIR_RIGHT), gdirs(DIR_UP) )
+        call swap_r32( gdirs(DIR_LEFT) , gdirs(DIR_DOWN) )
+      case ('\')
+        call swap_r32( gdirs(DIR_RIGHT), gdirs(DIR_DOWN) )
+        call swap_r32( gdirs(DIR_LEFT) , gdirs(DIR_UP) )
+      case ('-')
+        gdirs(DIR_RIGHT) = gdirs(DIR_RIGHT) + 0.5*(gdirs(DIR_UP) + gdirs(DIR_DOWN))
+        gdirs(DIR_LEFT)  = gdirs(DIR_LEFT)  + 0.5*(gdirs(DIR_UP) + gdirs(DIR_DOWN))
+        gdirs(DIR_UP  )  = 0.0
+        gdirs(DIR_DOWN)  = 0.0
+      case ('|')
+        gdirs(DIR_UP)    = gdirs(DIR_UP)    + 0.5*(gdirs(DIR_RIGHT) + gdirs(DIR_LEFT))
+        gdirs(DIR_DOWN)  = gdirs(DIR_DOWN)  + 0.5*(gdirs(DIR_RIGHT) + gdirs(DIR_LEFT))
+        gdirs(DIR_RIGHT) = 0.0
+        gdirs(DIR_LEFT)  = 0.0
+      case default
+      end select
+      end associate
     end do
   end subroutine
-
-
 
 end program main
