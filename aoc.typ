@@ -1,3 +1,50 @@
+#let day5() = {
+  [= Day 5]
+
+  let sections = read("data/day5.txt").split("\n\n")
+
+  let preprocess(array) = {
+    array.split("\n").slice(1).filter( s => s.len() > 0 ).map( s => s.split().map(int)).sorted( key: a => a.at(1) )
+  }
+
+  let seed_to_soil = preprocess(sections.at(1))
+  let soil_to_fert = preprocess(sections.at(2))
+  let fert_to_watr = preprocess(sections.at(3))
+  let watr_to_lght = preprocess(sections.at(4))
+  let lght_to_temp = preprocess(sections.at(5))
+  let temp_to_hmty = preprocess(sections.at(6))
+  let hmty_to_locn = preprocess(sections.at(7))
+
+  let dest(src, ranges) = {
+    let dst = src
+    let i = 0
+    for (dst_start, src_start, rlen) in ranges {
+      if src_start <= src and src < src_start + rlen {
+        return dst_start + (src - src_start)
+      }
+    }
+    return dst
+  }
+
+  let seeds = sections.at(0).split().slice(1).map(int)
+
+  let locs = ()
+
+  for seed in seeds {
+    let soil = dest(seed, seed_to_soil)
+    let fert = dest(soil, soil_to_fert)
+    let watr = dest(fert, fert_to_watr)
+    let lght = dest(watr, watr_to_lght)
+    let temp = dest(lght, lght_to_temp)
+    let hmty = dest(temp, temp_to_hmty)
+    let locn = dest(hmty, hmty_to_locn)
+    locs.push(locn)
+  }
+
+  [ Part 1: #calc.min(..locs) ]
+
+}
+
 #let day4() = {
   [= Day 4]
   let cards = read("data/day4.txt").split("\n").slice(0,-1)
@@ -122,4 +169,5 @@
 #day1()
 #day2()
 #day4()
+#day5()
 
