@@ -1,3 +1,33 @@
+#let day6() = {
+  [= Day 6]
+
+  let times1 = (42, 89, 91, 89)
+  let dists1 = (308, 1170, 1291, 1467)
+
+  // Part 2
+  let times2 = (42899189,)
+  let dists2 = (308117012911467,)
+
+  // Example
+  //let times = (7, 15, 30)
+  //let dists = (8, 40, 200)
+
+  let ways(times, dists) = {
+    let ranges = ()
+    for (T, D) in times.zip(dists) {
+      let zero_n = calc.floor( (T - calc.sqrt(calc.pow(T,2) - 4*D))/2 + 1)
+      let zero_p = calc.ceil( (T + calc.sqrt(calc.pow(T,2) - 4*D))/2 - 1 )
+      let valid_range = zero_p - zero_n + 1
+      ranges.push( valid_range )
+    }
+    return ranges.product()
+  }
+
+  [ Part 1: #ways(times1, dists1) \ ]
+  [ Part 2: #ways(times2, dists2) \ ]
+
+}
+
 #let day5() = {
   [= Day 5]
 
@@ -205,4 +235,5 @@
 #day2()
 #day4()
 #day5()
+#day6()
 
