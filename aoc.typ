@@ -1,3 +1,65 @@
+#let day7() = {
+  [= Day 7]
+
+  let base13 = "23456789TJQKA"
+
+  let convert_cc(string) = {
+    let rev_string = string.rev()
+    let count = (0,0,0,0,0,0,0,0,0,0,0,0,0)
+    let decimal = 0
+    let c = 1
+    
+    for s in rev_string {
+      let p = base13.position(s)
+      [ p ]
+      count.at(p) += 1
+      let b13 = c * p
+      decimal += b13
+      c *= 13
+    }
+
+    if count.any( x => x == 5 ) {
+      // 5 of a kind
+      decimal += c * 6
+    } else if count.any( x => x == 4 ) {
+      // 4 of a kind
+      decimal += c * 5
+    } else if count.any( x => x == 3 ) {
+      if count.any( x => x == 2 ) {
+        // full house
+        decimal += c * 4
+      } else {
+        // 3 of a kind
+        decimal += c * 3
+      }
+    } else if count.any( x => x == 2 ) {
+      let pair_count = count.filter( x => x == 2 ).len()
+      if pair_count == 2 {
+        // two pairs
+        decimal += c * 2
+      } else {
+        // 2 of a kind
+        decimal += c * 1
+      }
+    }
+
+    return decimal
+  }
+
+  let cards = read("data/day7.txt").split("\n").slice(0,-1).map( x => x.split() ).map( x => (x.at(0), convert_cc(x.at(0)), int(x.at(1))) )
+
+  let sorted_cards = cards.sorted( key: x => x.at(1) )
+
+  let part1 = 0
+
+  for (i,c) in sorted_cards.enumerate() {
+    part1 += (i+1) * c.at(2)
+  }
+  
+  [ #part1 ]
+
+}
+
 #let day6() = {
   [= Day 6]
 
@@ -236,4 +298,4 @@
 #day4()
 #day5()
 #day6()
-
+#day7()
